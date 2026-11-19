@@ -72,6 +72,8 @@ main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
 .opt.wrong{border-color:var(--red);background:var(--redbg)}
 .opt input{margin-top:3px;transform:scale(1.25);accent-color:var(--orange);flex:none}
 .opt .letter{font-weight:800;flex:none}
+.opt>span:last-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.qtext,.ansline,.expl{overflow-wrap:anywhere}
 .expl{display:none;border-left:4px solid var(--orange);background:#ecfdf5;border-radius:0 12px 12px 0;padding:14px 16px;margin-top:16px;line-height:1.6;font-size:16px;animation:fadeUp .3s ease both}
 @media (prefers-color-scheme: dark){.expl{background:#0d2b20}}
 .expl.show{display:block}
@@ -413,7 +415,7 @@ function finish(){
   wrong.forEach(qi=>{
     const q=part[qi], sel=answers[qi]||[];
     const div=document.createElement('div'); div.className='reviewitem';
-    const qd=document.createElement('div'); qd.className='qtext'; qd.textContent='#'+q.n+' ['+q.domain+'] — '+q.q; div.appendChild(qd);
+    const qd=document.createElement('div'); qd.className='qtext'; qd.textContent='Question '+(order.indexOf(qi)+1)+' of '+total+' · #'+q.n+' from the set ['+q.domain+'] — '+q.q; div.appendChild(qd);
     const a1=document.createElement('div'); a1.className='ansline';
     a1.innerHTML='Your answer: <span class="yourwrong">'+sel.map(i=>'ABCDEF'[i]+'. '+q.options[i]).join(' · ')+'</span>';
     div.appendChild(a1);
@@ -425,7 +427,7 @@ function finish(){
   });
   if(skipped.length){
     const sk=document.createElement('div'); sk.className='ansline'; sk.style.color='var(--muted)'; sk.style.marginTop='16px';
-    sk.textContent='Not answered ('+skipped.length+'): '+skipped.map(qi=>'#'+part[qi].n).join(', ');
+    sk.textContent='Not answered ('+skipped.length+') — question numbers in this part: '+skipped.map(qi=>order.indexOf(qi)+1).join(', ');
     rl.appendChild(sk);
   }
   document.getElementById('reviewCard').classList.add('hidden');
