@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AWS SAA-C03 Practice Quiz — 680 Questions</title>
+<script>(function(){var t='light';try{t=localStorage.getItem('saaQuizTheme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}catch(e){}document.documentElement.setAttribute('data-theme',t);})();</script>
 <style>
 :root{
   --orange:#10B981; --orange-d:#059669; --ink:#16191f; --bg:#eef1f4; --card:#ffffff;
@@ -11,11 +12,10 @@
   --muted:#5f6b7a; --hdr:#232f3e; --shadow:0 6px 24px rgba(22,25,31,.08);
   --shadow-sm:0 2px 8px rgba(22,25,31,.06); --radius:16px;
 }
-@media (prefers-color-scheme: dark){
-  :root{ --ink:#e8ecf1; --bg:#12161c; --card:#1c232e; --line:#33405200; --line:#334052;
-    --greenbg:#0d2b20; --redbg:#3d1d14; --muted:#9aa7b5; --shadow:0 6px 24px rgba(0,0,0,.4);
-    --shadow-sm:0 2px 8px rgba(0,0,0,.35); }
-}
+html[data-theme="dark"]{ --ink:#e8ecf1; --bg:#12161c; --card:#1c232e; --line:#334052;
+  --greenbg:#0d2b20; --redbg:#3d1d14; --muted:#9aa7b5; --shadow:0 6px 24px rgba(0,0,0,.4);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.35); color-scheme:dark; }
+html[data-theme="light"]{ color-scheme:light; }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
@@ -24,6 +24,11 @@ header{position:sticky;top:0;z-index:20;background:rgba(35,47,62,.92);backdrop-f
 header .logo{background:var(--orange);color:#16191f;font-weight:800;border-radius:8px;padding:4px 10px;font-size:15px;letter-spacing:.3px}
 .brand{display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .brand:active{opacity:.75}
+.themeswitch{margin-left:auto;flex:none;display:flex;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.themeswitch input{display:none}
+.ts-track{width:54px;height:29px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);position:relative;display:block;transition:background .2s ease}
+.ts-knob{position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;background:#fff;color:#16191f;font-size:12.5px;display:flex;align-items:center;justify-content:center;transition:left .22s ease,background .22s ease}
+html[data-theme="dark"] .ts-knob{left:27px;background:var(--orange)}
 header h1{font-size:17px;margin:0;font-weight:600}
 main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
 .hero{background:linear-gradient(135deg,#232f3e 0%,#37475a 60%,#4a5a70 100%);color:#fff;border-radius:var(--radius);padding:28px 24px;margin-bottom:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
@@ -63,11 +68,11 @@ main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
 .badge{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:3px 11px;color:#fff;letter-spacing:.2px}
 .b-Secure{background:#7d3c98}.b-Resilient{background:#1a7f4b}.b-High-Performing{background:#146eb4}.b-Cost{background:#b7791f}
 .choosehint{display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 11px;margin-top:12px}
-@media (prefers-color-scheme: dark){.choosehint{background:#0b2e22;color:#6ee7b7;border-color:#065f46}}
+html[data-theme="dark"] .choosehint{background:#0b2e22;color:#6ee7b7;border-color:#065f46}
 .opt{display:flex;gap:11px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:13px 14px;margin-top:10px;cursor:pointer;line-height:1.55;font-size:16.5px;background:var(--card);transition:border-color .15s ease,background .15s ease,transform .12s ease}
 .opt:hover{border-color:#aab7c4;transform:translateY(-1px)}
 .opt.selected{border-color:var(--orange);background:#ecfdf5;box-shadow:0 0 0 3px rgba(16,185,129,.20)}
-@media (prefers-color-scheme: dark){.opt.selected{background:#0d2b20}}
+html[data-theme="dark"] .opt.selected{background:#0d2b20}
 .opt.correct{border-color:var(--green);background:var(--greenbg)}
 .opt.wrong{border-color:var(--red);background:var(--redbg)}
 .opt input{margin-top:3px;transform:scale(1.25);accent-color:var(--orange);flex:none}
@@ -75,7 +80,7 @@ main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
 .opt>span:last-child{flex:1;min-width:0;overflow-wrap:anywhere}
 .qtext,.ansline,.expl{overflow-wrap:anywhere}
 .expl{display:none;border-left:4px solid var(--orange);background:#ecfdf5;border-radius:0 12px 12px 0;padding:14px 16px;margin-top:16px;line-height:1.6;font-size:16px;animation:fadeUp .3s ease both}
-@media (prefers-color-scheme: dark){.expl{background:#0d2b20}}
+html[data-theme="dark"] .expl{background:#0d2b20}
 .expl.show{display:block}
 .expl b{display:block;margin-bottom:5px}
 .navrow{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
@@ -96,7 +101,7 @@ main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
 .center{text-align:center}
 .reviewitem{border-top:1px solid var(--line);padding:16px 0}
 .revlabel{font-size:17.5px;font-weight:800;color:#047857;margin-bottom:7px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-@media (prefers-color-scheme: dark){.revlabel{color:#34d399}}
+html[data-theme="dark"] .revlabel{color:#34d399}
 .reviewitem .qtext{font-size:16.5px}
 .ansline{font-size:15.5px;margin-top:7px;line-height:1.55}
 .yourwrong{color:var(--red)} .rightans{color:var(--green);font-weight:700}
@@ -124,6 +129,10 @@ main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
     <span class="logo">AWS</span>
     <h1>SAA-C03 Practice Quiz</h1>
   </div>
+  <label class="themeswitch" title="Dark mode on/off">
+    <input type="checkbox" id="themeToggle" onchange="toggleTheme(this.checked)">
+    <span class="ts-track"><span class="ts-knob" id="tsKnob">☀️</span></span>
+  </label>
 </header>
 <main>
   <section id="home">
@@ -444,8 +453,20 @@ function finish(){
   window.scrollTo({top:0});
 }
 function toggleReview(){ document.getElementById('reviewCard').classList.toggle('hidden'); }
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  try{ localStorage.setItem('saaQuizTheme',t); }catch(e){}
+  syncThemeSwitch();
+}
+function toggleTheme(dark){ applyTheme(dark ? 'dark' : 'light'); }
+function syncThemeSwitch(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const tg=document.getElementById('themeToggle'); if(tg) tg.checked=dark;
+  const kb=document.getElementById('tsKnob'); if(kb) kb.textContent=dark ? '🌙' : '☀️';
+}
 history.replaceState({view:'home'},'');
 buildHome();
+syncThemeSwitch();
 </script>
 </body>
 </html>
