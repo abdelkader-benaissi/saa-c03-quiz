@@ -151,7 +151,7 @@ main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
   </section>
 
   <section id="quiz" class="hidden">
-    <div class="card fadeup" id="quizcard">
+    <div class="card" id="quizcard">
       <div class="meta"><span id="qcounter"></span><span id="scoreLine"></span></div>
       <div class="progresswrap"><div class="progressbar" id="pbar"></div></div>
       <div id="domainBadge"></div>
@@ -334,8 +334,6 @@ function refreshPalette(){
 }
 function render(){
   const q=cur();
-  const card=document.getElementById('quizcard');
-  card.classList.remove('fadeup'); void card.offsetWidth; card.classList.add('fadeup');
   document.getElementById('qcounter').textContent = 'Part '+(partIdx+1)+' · Question '+(idx+1)+' of '+order.length;
   const doneCount=Object.keys(checked).length, corrCount=Object.values(checked).filter(Boolean).length;
   document.getElementById('scoreLine').textContent = 'Checked: '+doneCount+' · Correct: '+corrCount;
@@ -378,7 +376,13 @@ function render(){
 function pick(oi,multi){
   const qi=order[idx]; let sel=answers[qi]||[];
   if(multi){ sel = sel.includes(oi) ? sel.filter(x=>x!==oi) : [...sel,oi]; } else sel=[oi];
-  answers[qi]=sel; render();
+  answers[qi]=sel;
+  const box=document.getElementById('options');
+  [...box.children].forEach((el,i)=>{
+    el.classList.toggle('selected', sel.includes(i));
+    const inp=el.querySelector('input'); if(inp) inp.checked=sel.includes(i);
+  });
+  refreshPalette(); saveProgress();
 }
 function sameSet(a,b){ if(!a||a.length!==b.length) return false; const s=[...a].sort(); const t=[...b].sort(); return s.every((v,i)=>v===t[i]); }
 function checkAnswer(){
