@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AWS SAA-C03 Quiz — 680 Questions in 6 Parts</title>
+<title>AWS SAA-C03 Practice Quiz — 680 Questions</title>
 <style>
 :root{
   --orange:#10B981; --orange-d:#059669; --ink:#16191f; --bg:#eef1f4; --card:#ffffff;
@@ -24,20 +24,20 @@ header{position:sticky;top:0;z-index:20;background:rgba(35,47,62,.92);backdrop-f
 header .logo{background:var(--orange);color:#16191f;font-weight:800;border-radius:8px;padding:4px 10px;font-size:15px;letter-spacing:.3px}
 .brand{display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .brand:active{opacity:.75}
-header h1{font-size:15.5px;margin:0;font-weight:600}
-main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
+header h1{font-size:17px;margin:0;font-weight:600}
+main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
 .hero{background:linear-gradient(135deg,#232f3e 0%,#37475a 60%,#4a5a70 100%);color:#fff;border-radius:var(--radius);padding:28px 24px;margin-bottom:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,.35),transparent 70%)}
-.hero h2{margin:0 0 8px;font-size:24px;line-height:1.25}
-.hero p{margin:0;line-height:1.6;color:#d7dee6;font-size:15px;max-width:560px}
+.hero h2{margin:0 0 8px;font-size:28px;line-height:1.25}
+.hero p{margin:0;line-height:1.6;color:#d7dee6;font-size:16px;max-width:560px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;position:relative;z-index:1}
 .chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600}
 .chip b{color:#34d399}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
-.card h3{margin:0 0 10px;font-size:17px}
+.card h3{margin:0 0 10px;font-size:18px}
 .fadeup{animation:fadeUp .32s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.btn{display:block;border:none;cursor:pointer;background:var(--orange);color:#16191f;font-weight:700;font-size:16px;padding:14px 20px;border-radius:12px;width:100%;text-align:left;transition:transform .15s ease,box-shadow .15s ease,background .15s ease;box-shadow:0 3px 10px rgba(16,185,129,.30)}
+.btn{display:block;border:none;cursor:pointer;background:var(--orange);color:#16191f;font-weight:700;font-size:17px;padding:14px 20px;border-radius:12px;width:100%;text-align:left;transition:transform .15s ease,box-shadow .15s ease,background .15s ease;box-shadow:0 3px 10px rgba(16,185,129,.30)}
 .btn:hover{background:var(--orange-d);transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn.secondary{background:transparent;border:2px solid var(--line);color:var(--ink);text-align:center;box-shadow:none}
@@ -50,7 +50,7 @@ main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
 .partcard:hover{border-color:var(--orange);transform:translateY(-2px);box-shadow:var(--shadow)}
 .partcard .pnum{color:var(--ink)}
 .partcard .phead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.partcard .pnum{font-size:17px;font-weight:800}
+.partcard .pnum{font-size:19px;font-weight:800}
 .partcard .pcount{font-size:13px;color:var(--muted);font-weight:600}
 .dombar{display:flex;height:7px;border-radius:99px;overflow:hidden;margin:12px 0 8px;background:var(--line)}
 .dombar span{display:block;height:100%}
@@ -58,13 +58,13 @@ main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
 .partcard .pprog{font-size:12.5px;font-weight:700;color:var(--orange-d);margin-top:6px;min-height:16px}
 .progresswrap{background:var(--line);border-radius:99px;height:9px;overflow:hidden;margin:10px 0 6px}
 .progressbar{background:linear-gradient(90deg,var(--orange),#34D399);height:100%;width:0%;transition:width .35s ease;border-radius:99px}
-.meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap;gap:6px;font-weight:600}
-.qtext{font-size:17px;line-height:1.6;white-space:pre-wrap}
+.meta{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap;gap:6px;font-weight:600}
+.qtext{font-size:19px;line-height:1.65;white-space:pre-wrap}
 .badge{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:3px 11px;color:#fff;letter-spacing:.2px}
 .b-Secure{background:#7d3c98}.b-Resilient{background:#1a7f4b}.b-High-Performing{background:#146eb4}.b-Cost{background:#b7791f}
 .choosehint{display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 11px;margin-top:12px}
 @media (prefers-color-scheme: dark){.choosehint{background:#0b2e22;color:#6ee7b7;border-color:#065f46}}
-.opt{display:flex;gap:11px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:13px 14px;margin-top:10px;cursor:pointer;line-height:1.5;font-size:15.5px;background:var(--card);transition:border-color .15s ease,background .15s ease,transform .12s ease}
+.opt{display:flex;gap:11px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:13px 14px;margin-top:10px;cursor:pointer;line-height:1.55;font-size:16.5px;background:var(--card);transition:border-color .15s ease,background .15s ease,transform .12s ease}
 .opt:hover{border-color:#aab7c4;transform:translateY(-1px)}
 .opt.selected{border-color:var(--orange);background:#ecfdf5;box-shadow:0 0 0 3px rgba(16,185,129,.20)}
 @media (prefers-color-scheme: dark){.opt.selected{background:#0d2b20}}
@@ -72,7 +72,7 @@ main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
 .opt.wrong{border-color:var(--red);background:var(--redbg)}
 .opt input{margin-top:3px;transform:scale(1.25);accent-color:var(--orange);flex:none}
 .opt .letter{font-weight:800;flex:none}
-.expl{display:none;border-left:4px solid var(--orange);background:#ecfdf5;border-radius:0 12px 12px 0;padding:14px 16px;margin-top:16px;line-height:1.6;font-size:15px;animation:fadeUp .3s ease both}
+.expl{display:none;border-left:4px solid var(--orange);background:#ecfdf5;border-radius:0 12px 12px 0;padding:14px 16px;margin-top:16px;line-height:1.6;font-size:16px;animation:fadeUp .3s ease both}
 @media (prefers-color-scheme: dark){.expl{background:#0d2b20}}
 .expl.show{display:block}
 .expl b{display:block;margin-bottom:5px}
@@ -85,12 +85,16 @@ main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
 .palette button.okk{background:var(--orange);border-color:var(--orange);color:#fff}
 .palette button.bad{background:var(--red);border-color:var(--red);color:#fff}
 .palette button.cur{outline:none;box-shadow:0 0 0 2px var(--card),0 0 0 5px var(--orange)}
+.palnav{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:13.5px;color:var(--muted);font-weight:600}
+.palbtn{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13.5px;transition:border-color .13s ease}
+.palbtn:hover{border-color:var(--orange)}
+.palbtn:disabled{opacity:.35;cursor:not-allowed}
 .scorebig{font-size:52px;font-weight:800;text-align:center;margin:8px 0;letter-spacing:-1px}
 .pass{color:var(--green)} .fail{color:var(--red)}
 .center{text-align:center}
 .reviewitem{border-top:1px solid var(--line);padding:16px 0}
-.reviewitem .qtext{font-size:15.5px}
-.ansline{font-size:14.5px;margin-top:7px;line-height:1.55}
+.reviewitem .qtext{font-size:16.5px}
+.ansline{font-size:15.5px;margin-top:7px;line-height:1.55}
 .yourwrong{color:var(--red)} .rightans{color:var(--green);font-weight:700}
 .jump{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:14px;color:var(--muted);flex-wrap:wrap}
 .jump input{width:84px;padding:9px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:var(--card);color:var(--ink)}
@@ -100,10 +104,10 @@ main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
 .modalcard p{margin:0;line-height:1.55;color:var(--muted);font-size:15px}
 .danger{background:var(--red)!important;color:#fff!important;box-shadow:none!important}
 .hidden{display:none}
-.domtable{width:100%;border-collapse:collapse;margin:12px 0;font-size:15px}
+.domtable{width:100%;border-collapse:collapse;margin:12px 0;font-size:16px}
 .domtable td,.domtable th{border-bottom:1px solid var(--line);padding:9px 6px;text-align:left}
 .domtable td:last-child,.domtable th:last-child{text-align:right}
-.note{line-height:1.65;color:var(--muted);font-size:14px}
+.note{line-height:1.65;color:var(--muted);font-size:15px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .dot{width:11px;height:11px;border-radius:4px;display:inline-block}
@@ -114,7 +118,7 @@ main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
 <header>
   <div class="brand" onclick="quitToHome()" title="Back to the parts list">
     <span class="logo">AWS</span>
-    <h1>SAA-C03 Practice Quiz — 6 Parts</h1>
+    <h1>SAA-C03 Practice Quiz</h1>
   </div>
 </header>
 <main>
@@ -169,6 +173,7 @@ main{max-width:880px;margin:0 auto;padding:20px 14px 64px}
         <span><span class="dot" style="background:transparent;border:3px solid var(--orange)"></span> current</span>
       </div>
       <div class="palette" id="palette"></div>
+      <div class="palnav"><button class="palbtn" id="palPrev" onclick="palPage(-1)">‹ Prev</button><span id="palInfo"></span><button class="palbtn" id="palNext" onclick="palPage(1)">Next ›</button></div>
     </div>
   </section>
 
@@ -290,13 +295,29 @@ function resetPart(){
   });
 }
 function cur(){return part[order[idx]];}
+const PALPAGE=35; let palPageIdx=0;
 function buildPalette(){
   const p=document.getElementById('palette'); p.innerHTML='';
-  order.forEach((qi,i)=>{
+  const start=palPageIdx*PALPAGE, end=Math.min(order.length, start+PALPAGE);
+  for(let i=start;i<end;i++){
     const b=document.createElement('button'); b.textContent=i+1; b.id='pal'+i;
     b.onclick=()=>{idx=i; render();};
     p.appendChild(b);
-  });
+  }
+  updatePalNav();
+}
+function updatePalNav(){
+  const pages=Math.max(1, Math.ceil(order.length/PALPAGE));
+  const info=document.getElementById('palInfo');
+  if(info) info.textContent='Questions '+(palPageIdx*PALPAGE+1)+'–'+Math.min(order.length,(palPageIdx+1)*PALPAGE)+' of '+order.length;
+  const pv=document.getElementById('palPrev'), nx=document.getElementById('palNext');
+  if(pv) pv.disabled = palPageIdx<=0;
+  if(nx) nx.disabled = palPageIdx>=pages-1;
+}
+function palPage(d){
+  const pages=Math.max(1, Math.ceil(order.length/PALPAGE));
+  palPageIdx=Math.min(pages-1, Math.max(0, palPageIdx+d));
+  buildPalette(); refreshPalette();
 }
 function refreshPalette(){
   order.forEach((qi,i)=>{
@@ -345,6 +366,8 @@ function render(){
   } else { ex.className='expl'; ex.innerHTML=''; }
   document.getElementById('prevBtn').disabled = idx===0;
   document.getElementById('nextBtn').disabled = idx===order.length-1;
+  const needPage=Math.floor(idx/PALPAGE);
+  if(needPage!==palPageIdx){ palPageIdx=needPage; buildPalette(); }
   refreshPalette();
   saveProgress();
 }
@@ -363,33 +386,36 @@ function checkAnswer(){
 function move(d){ idx=Math.min(order.length-1, Math.max(0, idx+d)); render(); }
 function jumpTo(){ const v=parseInt(document.getElementById('jumpInput').value); if(v>=1&&v<=order.length){idx=v-1; render();} }
 function finish(){
-  let correct=0; const wrong=[];
+  let correct=0, answered=0; const wrong=[]; const skipped=[];
   const domScore={}; DOMAINS.forEach(d=>domScore[d]=[0,0]);
   order.forEach(qi=>{
     const q=part[qi], sel=answers[qi]||[];
-    domScore[q.domain][1]++;
+    if(!sel.length){ skipped.push(qi); return; }
+    answered++; domScore[q.domain][1]++;
     if(sameSet(sel,q.correct)){ correct++; domScore[q.domain][0]++; } else wrong.push(qi);
   });
-  const total=order.length, pct=Math.round(correct/total*100);
+  const total=order.length, pct=answered?Math.round(correct/answered*100):0;
   document.getElementById('quiz').classList.add('hidden');
   document.getElementById('results').classList.remove('hidden');
   document.getElementById('topprogress').style.width='0%';
   document.getElementById('resTitle').textContent='Part '+(partIdx+1)+' — Results';
   const sc=document.getElementById('resScore');
-  sc.textContent=pct+'%'; sc.className='scorebig '+(pct>=72?'pass':'fail');
-  document.getElementById('resDetail').innerHTML='You got <b>'+correct+' of '+total+'</b> correct. Questions you never checked count as wrong here. Your score by domain:';
-  let tbl='<table class="domtable"><tr><th>Domain</th><th>Correct</th></tr>';
-  DOMAINS.forEach(d=>{ const [c,t]=domScore[d]; tbl+='<tr><td><span class="badge b-'+d+'">'+d+'</span></td><td>'+c+' / '+t+' ('+Math.round(c/t*100)+'%)</td></tr>'; });
+  sc.textContent=answered? pct+'%' : '—';
+  sc.className='scorebig'+(answered ? (pct>=72 ? ' pass' : ' fail') : '');
+  document.getElementById('resDetail').innerHTML='You answered <b>'+answered+' of '+total+'</b> questions · <b>'+correct+' correct</b> · '+wrong.length+' wrong · '+skipped.length+' not answered.<br>The score counts only the questions you answered. Your score by domain:';
+  let tbl='<table class="domtable"><tr><th>Domain</th><th>Correct / Answered</th></tr>';
+  DOMAINS.forEach(d=>{ const [c,a]=domScore[d]; tbl+='<tr><td><span class="badge b-'+d+'">'+d+'</span></td><td>'+(a? c+' / '+a+' ('+Math.round(c/a*100)+'%)' : 'no answers yet')+'</td></tr>'; });
   tbl+='</table>';
   document.getElementById('resDomains').innerHTML=tbl;
   const rl=document.getElementById('reviewList'); rl.innerHTML='';
-  if(!wrong.length){ rl.innerHTML='<p>Nothing wrong — perfect part. 🎉</p>'; }
+  if(answered===0){ rl.innerHTML='<p>You have not answered any question in this part yet.</p>'; }
+  else if(!wrong.length){ rl.innerHTML='<p>Nothing wrong — every question you answered is correct. 🎉</p>'; }
   wrong.forEach(qi=>{
     const q=part[qi], sel=answers[qi]||[];
     const div=document.createElement('div'); div.className='reviewitem';
     const qd=document.createElement('div'); qd.className='qtext'; qd.textContent='#'+q.n+' ['+q.domain+'] — '+q.q; div.appendChild(qd);
     const a1=document.createElement('div'); a1.className='ansline';
-    a1.innerHTML='Your answer: <span class="yourwrong">'+(sel.length?sel.map(i=>'ABCDEF'[i]+'. '+q.options[i]).join(' · '):'(no answer)')+'</span>';
+    a1.innerHTML='Your answer: <span class="yourwrong">'+sel.map(i=>'ABCDEF'[i]+'. '+q.options[i]).join(' · ')+'</span>';
     div.appendChild(a1);
     const a2=document.createElement('div'); a2.className='ansline';
     a2.innerHTML='Correct: <span class="rightans">'+q.correct.map(i=>'ABCDEF'[i]+'. '+q.options[i]).join(' · ')+'</span>';
@@ -397,6 +423,11 @@ function finish(){
     if(q.explanation){ const e=document.createElement('div'); e.className='ansline'; e.style.color='var(--muted)'; e.textContent=q.explanation; div.appendChild(e); }
     rl.appendChild(div);
   });
+  if(skipped.length){
+    const sk=document.createElement('div'); sk.className='ansline'; sk.style.color='var(--muted)'; sk.style.marginTop='16px';
+    sk.textContent='Not answered ('+skipped.length+'): '+skipped.map(qi=>'#'+part[qi].n).join(', ');
+    rl.appendChild(sk);
+  }
   document.getElementById('reviewCard').classList.add('hidden');
   window.scrollTo({top:0});
 }
