@@ -30,7 +30,8 @@ header .logo{background:var(--orange);color:#16191f;font-weight:800;border-radiu
 .ts-knob{position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;background:#fff;color:#16191f;font-size:12.5px;display:flex;align-items:center;justify-content:center;transition:left .22s ease,background .22s ease}
 html[data-theme="dark"] .ts-knob{left:27px;background:var(--orange)}
 header h1{font-size:17px;margin:0;font-weight:600}
-main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
+main{margin:0 auto;padding:20px 14px 64px}
+@media(min-width:900px){main{width:70%}}
 .hero{background:linear-gradient(135deg,#232f3e 0%,#37475a 60%,#4a5a70 100%);color:#fff;border-radius:var(--radius);padding:28px 24px;margin-bottom:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,.35),transparent 70%)}
 .hero h2{margin:0 0 8px;font-size:28px;line-height:1.25}
