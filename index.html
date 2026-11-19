@@ -95,6 +95,8 @@ main{max-width:940px;margin:0 auto;padding:20px 14px 64px}
 .pass{color:var(--green)} .fail{color:var(--red)}
 .center{text-align:center}
 .reviewitem{border-top:1px solid var(--line);padding:16px 0}
+.revlabel{font-size:17.5px;font-weight:800;color:#047857;margin-bottom:7px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+@media (prefers-color-scheme: dark){.revlabel{color:#34d399}}
 .reviewitem .qtext{font-size:16.5px}
 .ansline{font-size:15.5px;margin-top:7px;line-height:1.55}
 .yourwrong{color:var(--red)} .rightans{color:var(--green);font-weight:700}
@@ -334,7 +336,7 @@ function render(){
   const q=cur();
   const card=document.getElementById('quizcard');
   card.classList.remove('fadeup'); void card.offsetWidth; card.classList.add('fadeup');
-  document.getElementById('qcounter').textContent = 'Part '+(partIdx+1)+' · Question '+(idx+1)+' of '+order.length+'  ·  #'+q.n+' from the set';
+  document.getElementById('qcounter').textContent = 'Part '+(partIdx+1)+' · Question '+(idx+1)+' of '+order.length;
   const doneCount=Object.keys(checked).length, corrCount=Object.values(checked).filter(Boolean).length;
   document.getElementById('scoreLine').textContent = 'Checked: '+doneCount+' · Correct: '+corrCount;
   const pctDone=((idx+1)/order.length*100)+'%';
@@ -415,7 +417,11 @@ function finish(){
   wrong.forEach(qi=>{
     const q=part[qi], sel=answers[qi]||[];
     const div=document.createElement('div'); div.className='reviewitem';
-    const qd=document.createElement('div'); qd.className='qtext'; qd.textContent='Question '+(order.indexOf(qi)+1)+' of '+total+' · #'+q.n+' from the set ['+q.domain+'] — '+q.q; div.appendChild(qd);
+    const lab=document.createElement('div'); lab.className='revlabel';
+    lab.appendChild(document.createTextNode('Question '+(order.indexOf(qi)+1)+' of '+total));
+    const bd=document.createElement('span'); bd.className='badge b-'+q.domain; bd.textContent=q.domain; lab.appendChild(bd);
+    div.appendChild(lab);
+    const qd=document.createElement('div'); qd.className='qtext'; qd.textContent=q.q; div.appendChild(qd);
     const a1=document.createElement('div'); a1.className='ansline';
     a1.innerHTML='Your answer: <span class="yourwrong">'+sel.map(i=>'ABCDEF'[i]+'. '+q.options[i]).join(' · ')+'</span>';
     div.appendChild(a1);
