@@ -228,6 +228,11 @@ function saveProgress(){
   s[partIdx]={answers:answers, checked:checked, idx:idx};
   saveStore(s);
 }
+function breakdown(items){
+  const c={}; DOMAINS.forEach(d=>c[d]=0);
+  items.forEach(q=>{ if(c[q.domain]!==undefined) c[q.domain]++ });
+  return c;
+}
 function buildHome(){
   const grid=document.getElementById('partgrid'); grid.innerHTML='';
   const store=loadStore();
