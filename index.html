@@ -159,6 +159,27 @@ html[data-theme="dark"] .revlabel{color:#34d399}
       <p class="note">Each question is tagged with its domain (classified from its content). Your results page breaks the score down by domain so you can see where you are weak. Only 4 of the 684 source questions are left out — Q96, Q429, Q477 and Q494 — because the policy or options they refer to are images in the source PDF.</p>
       <div class="partgrid" id="partgrid"></div>
     </div>
+    <div class="card" style="margin-top:16px">
+      <h3 style="margin-top:0">Your session</h3>
+      <div id="sessionLocked">
+        <p class="note">Your progress is kept under your personal number. Type it here to load your session on this device — and on any other device where you type the same number.</p>
+        <div class="navrow" style="margin-top:14px">
+          <input type="password" id="pinInput" inputmode="numeric" autocomplete="off" placeholder="Your number" style="flex:1;border:2px solid var(--line);border-radius:10px;padding:11px;font-size:16px;background:var(--card);color:var(--ink)">
+          <button class="btn" onclick="unlockSession()">Open my session</button>
+        </div>
+        <div id="sessionSetup" class="hidden">
+          <input type="password" id="setupToken" autocomplete="off" placeholder="First time only: paste your gist token" style="width:100%;box-sizing:border-box;border:2px solid var(--line);border-radius:10px;padding:11px;font-size:14px;background:var(--card);color:var(--ink);margin-top:10px">
+        </div>
+        <p class="note" id="pinMsg"></p>
+      </div>
+      <div id="sessionOpen" class="hidden">
+        <p class="note" id="sessionStatus">Session open.</p>
+        <div class="navrow" style="margin-top:14px">
+          <button class="btn secondary" onclick="syncPull(true)">Sync now</button>
+          <button class="btn secondary" onclick="lockSession()">Lock this device</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="quiz" class="hidden">
@@ -222,7 +243,184 @@ const LSKEY='saaQuizV3';
 let part=null, partIdx=0, order=[], idx=0, answers={}, checked={};
 
 function loadStore(){ try{ return JSON.parse(localStorage.getItem(LSKEY))||{} }catch(e){ return {} } }
-function saveStore(s){ try{ localStorage.setItem(LSKEY, JSON.stringify(s)) }catch(e){} }
+function saveStore(s){ try{ localStorage.setItem(LSKEY, JSON.stringify(s)); noteLocalChange(); }catch(e){} }
+// ---- Session sync: your number unlocks an encrypted key envelope (public gist) ----
+const SYNC_FILE='saa-quiz-progress.json';
+const ENVELOPE_FILE='saa-quiz-key-envelope.json';
+const GH_USER='abdelkader-benaissi';
+let syncTimer=null, syncApplying=false, lastPullAt=0, _syncToken=null, _envelopeId=null;
+function ghGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function ghSet(k,v){ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+function pinHash(){ return ghGet('saaQuizPin'); }
+function sessionOpen(){ return !!pinHash() && !!_syncToken; }
+async function sha256hex(text){
+  const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function b64encode(bytes){ let s=''; bytes.forEach(b=>{ s+=String.fromCharCode(b); }); return btoa(s); }
+function b64decode(str){ const s=atob(str); const out=new Uint8Array(s.length); for(let i=0;i<s.length;i++) out[i]=s.charCodeAt(i); return out; }
+async function deriveKey(number, salt){
+  const base=await crypto.subtle.importKey('raw', new TextEncoder().encode(number), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:salt, iterations:250000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function encryptToken(number, token){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(number, salt);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key, new TextEncoder().encode(token));
+  return JSON.stringify({v:1, salt:b64encode(salt), iv:b64encode(iv), data:b64encode(new Uint8Array(ct))});
+}
+async function decryptToken(number, envelopeJson){
+  const env=JSON.parse(envelopeJson);
+  const key=await deriveKey(number, b64decode(env.salt));
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:b64decode(env.iv)}, key, b64decode(env.data));
+  return new TextDecoder().decode(pt);
+}
+function sessionUI(){
+  const locked=document.getElementById('sessionLocked'), open=document.getElementById('sessionOpen');
+  if(!locked||!open) return;
+  locked.classList.toggle('hidden', sessionOpen());
+  open.classList.toggle('hidden', !sessionOpen());
+}
+function sessionStatus(msg){ const el=document.getElementById('sessionStatus'); if(el) el.textContent=msg; }
+function noteLocalChange(){ ghSet('saaQuizLocalTs', String(Date.now())); schedulePush(); }
+function schedulePush(){
+  if(!sessionOpen() || syncApplying) return;
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(()=>{ syncPush(); }, 2000);
+}
+async function ghFetch(path, opts){
+  opts=opts||{};
+  const h={'Accept':'application/vnd.github+json'};
+  if(_syncToken) h['Authorization']='Bearer '+_syncToken;
+  if(opts.body) h['Content-Type']='application/json';
+  return fetch('https://api.github.com'+path, {method:opts.method||'GET', headers:h, body:opts.body||undefined});
+}
+async function findEnvelope(){
+  if(_envelopeId) return _envelopeId;
+  try{
+    const r=await fetch('https://api.github.com/users/'+GH_USER+'/gists?per_page=100', {headers:{'Accept':'application/vnd.github+json'}});
+    if(!r.ok) return null;
+    const list=await r.json();
+    for(const g of list){ if(g.files && g.files[ENVELOPE_FILE]){ _envelopeId=g.id; return g.id; } }
+  }catch(e){}
+  return null;
+}
+async function readEnvelope(){
+  const id=await findEnvelope();
+  if(!id) return null;
+  const r=await fetch('https://gist.githubusercontent.com/'+GH_USER+'/'+id+'/raw/'+ENVELOPE_FILE);
+  if(!r.ok) return null;
+  return r.text();
+}
+async function syncFindGist(){
+  const cached=ghGet('saaQuizGistId'); if(cached) return cached;
+  const r=await ghFetch('/gists?per_page=100');
+  if(!r.ok) return null;
+  const list=await r.json();
+  for(const g of list){ if(g.files && g.files[SYNC_FILE]){ ghSet('saaQuizGistId', g.id); return g.id; } }
+  return null;
+}
+async function syncReadRemote(){
+  const id=await syncFindGist();
+  if(!id) return null;
+  const r=await ghFetch('/gists/'+id);
+  if(!r.ok) return null;
+  const d=await r.json();
+  const f=d.files && d.files[SYNC_FILE];
+  if(!f) return null;
+  let content=f.content;
+  if(f.truncated && f.raw_url){ const rr=await fetch(f.raw_url, {headers:{'Authorization':'Bearer '+_syncToken}}); content=await rr.text(); }
+  try{ return JSON.parse(content); }catch(e){ return null; }
+}
+function syncPayload(){
+  let theme=''; try{ theme=localStorage.getItem('saaQuizTheme')||''; }catch(e){}
+  return JSON.stringify({v:1, pin:pinHash(), updatedAt:Date.now(), store:loadStore(), theme:theme});
+}
+async function syncPush(){
+  if(!sessionOpen()) return;
+  try{
+    sessionStatus('Session open · syncing…');
+    const content=syncPayload();
+    let id=await syncFindGist();
+    let r;
+    if(id){ r=await ghFetch('/gists/'+id, {method:'PATCH', body:JSON.stringify({files:{[SYNC_FILE]:{content:content}}})}); }
+    else{ r=await ghFetch('/gists', {method:'POST', body:JSON.stringify({description:'SAA-C03 Quiz progress sync', public:false, files:{[SYNC_FILE]:{content:content}}})}); }
+    if(r.ok){
+      if(!id){ const d=await r.json(); ghSet('saaQuizGistId', d.id); }
+      const now=Date.now();
+      ghSet('saaQuizSyncTs', String(now)); ghSet('saaQuizLocalTs', String(now));
+      sessionStatus('Session open · synced '+new Date(now).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+    } else { sessionStatus('Session open · sync failed, will retry'); }
+  }catch(e){ sessionStatus('Session open · offline, will sync later'); }
+}
+async function syncPull(manual){
+  if(!sessionOpen()) return;
+  const nowMs=Date.now();
+  if(!manual && nowMs-lastPullAt<30000) return;
+  lastPullAt=nowMs;
+  try{
+    const remote=await syncReadRemote();
+    if(!remote){ schedulePush(); return; }
+    if(remote.pin !== pinHash()) return;
+    const syncTs=parseInt(ghGet('saaQuizSyncTs')||'0',10);
+    const localTs=parseInt(ghGet('saaQuizLocalTs')||'0',10);
+    if(remote.updatedAt>syncTs){
+      if(localTs>syncTs && localTs>remote.updatedAt){ schedulePush(); return; }
+      syncApplying=true;
+      saveStore(remote.store||{});
+      if(remote.theme){ try{ localStorage.setItem('saaQuizTheme', remote.theme); }catch(e){} document.documentElement.setAttribute('data-theme', remote.theme); syncThemeSwitch(); }
+      syncApplying=false;
+      ghSet('saaQuizSyncTs', String(remote.updatedAt)); ghSet('saaQuizLocalTs', String(remote.updatedAt));
+      buildHome();
+      sessionStatus('Session open · progress updated from your other device');
+    } else if(manual){ sessionStatus('Session open · already up to date'); }
+  }catch(e){}
+}
+async function unlockSession(){
+  const inp=document.getElementById('pinInput');
+  const msg=document.getElementById('pinMsg');
+  const num=(inp.value||'').trim();
+  if(!num){ msg.textContent='Type your number first.'; return; }
+  msg.textContent='Checking…';
+  let envelope=null;
+  try{ envelope=await readEnvelope(); }catch(e){}
+  if(!envelope){
+    // first-time setup: this device creates the envelope with a pasted token
+    const setup=document.getElementById('sessionSetup');
+    if(setup) setup.classList.remove('hidden');
+    msg.textContent='First-time setup: paste your GitHub token below (one time only), then press Open again.';
+    const tokInp=document.getElementById('setupToken');
+    const tok=(tokInp.value||'').trim();
+    if(!tok) return;
+    try{
+      const r=await fetch('https://api.github.com/gists?per_page=1', {headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+tok}});
+      if(!r.ok){ msg.textContent='GitHub rejected that token — check it has the gist box ticked.'; return; }
+    }catch(e){ msg.textContent='Could not reach GitHub — check your connection.'; return; }
+    _syncToken=tok;
+    const enc=await encryptToken(num, tok);
+    const cr=await ghFetch('/gists', {method:'POST', body:JSON.stringify({description:'SAA-C03 Quiz key envelope', public:true, files:{[ENVELOPE_FILE]:{content:enc}}})});
+    if(!cr.ok){ _syncToken=null; msg.textContent='Could not save the setup — try again.'; return; }
+    const cd=await cr.json(); _envelopeId=cd.id;
+    tokInp.value='';
+    if(setup) setup.classList.add('hidden');
+  } else {
+    try{ _syncToken=await decryptToken(num, envelope); }
+    catch(e){ msg.textContent='That number does not match this session.'; return; }
+  }
+  ghSet('saaQuizPin', await sha256hex(num));
+  inp.value=''; msg.textContent='';
+  sessionUI();
+  sessionStatus('Session open · syncing…');
+  await syncPull(true);
+  schedulePush();
+}
+function lockSession(){ _syncToken=null; ghSet('saaQuizPin', null); sessionUI(); }
+function sessionInit(){
+  sessionUI();
+  // token lives only in memory; after a reload the number must be typed again
+}
+
 function saveProgress(){
   const s=loadStore();
   s[partIdx]={answers:answers, checked:checked, idx:idx};
@@ -275,6 +473,7 @@ function showHome(){
   document.getElementById('home').classList.remove('hidden');
   document.getElementById('topprogress').style.width='0%';
   buildHome();
+  syncPull(false);
   window.scrollTo({top:0});
 }
 function quitToHome(){
@@ -459,6 +658,7 @@ function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   try{ localStorage.setItem('saaQuizTheme',t); }catch(e){}
   syncThemeSwitch();
+  schedulePush();
 }
 function toggleTheme(dark){ applyTheme(dark ? 'dark' : 'light'); }
 function syncThemeSwitch(){
@@ -469,6 +669,7 @@ function syncThemeSwitch(){
 history.replaceState({view:'home'},'');
 buildHome();
 syncThemeSwitch();
+sessionInit();
 </script>
 </body>
 </html>
