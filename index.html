@@ -167,7 +167,7 @@ html[data-theme="dark"] .revlabel{color:#34d399}
         <button class="btn secondary" id="syncNowBtn" style="display:none" onclick="syncPull(true)">Sync now</button>
         <button class="btn secondary" id="syncDiscBtn" style="display:none" onclick="syncDisconnect()">Disconnect</button>
       </div>
-      <p class="note">Connect each phone or PC once with a short GitHub code. After that, your answers sync automatically between your devices.</p>
+      <p class="note">Connect each phone or PC once with a gist-only GitHub token. After that, your answers sync automatically between your devices.</p>
     </div>
     <div class="card" style="margin-top:16px">
       <h3 style="margin-top:0">Progress backup</h3>
@@ -247,12 +247,12 @@ html[data-theme="dark"] .revlabel{color:#34d399}
 <div id="syncmodal" class="modal hidden">
   <div class="modalcard">
     <h3 style="margin-top:0">Connect this device</h3>
-    <p class="note">Open <b>github.com/login/device</b> (button below), sign in if asked, and enter this code:</p>
-    <div id="syncCode" style="font-size:30px;font-weight:800;letter-spacing:4px;margin:16px 0;text-align:center"></div>
-    <p class="note">Approve the app there, then come back here — this window finishes on its own.</p>
+    <p class="note">On this device, open <b>github.com/settings/tokens</b> → <b>Generate new token (classic)</b> → tick <b>only</b> the <b>gist</b> box → Generate. Then paste the token here. It can only read/write your gists — nothing else in your account — and it never leaves this browser except to GitHub.</p>
+    <input type="password" id="syncTokenInput" placeholder="Paste your gist token (ghp_…)" autocomplete="off" style="width:100%;box-sizing:border-box;border:2px solid var(--line);border-radius:10px;padding:11px;font-size:14px;background:var(--card);color:var(--ink)">
+    <p class="note" id="syncTokenMsg"></p>
     <div class="navrow">
       <button class="btn secondary" onclick="closeSyncModal()">Cancel</button>
-      <a class="btn" style="text-align:center;text-decoration:none" href="https://github.com/login/device" target="_blank" rel="noopener">Open github.com/login/device</a>
+      <button class="btn" onclick="syncSaveToken()">Save &amp; connect</button>
     </div>
   </div>
 </div>
@@ -266,9 +266,8 @@ let part=null, partIdx=0, order=[], idx=0, answers={}, checked={};
 function loadStore(){ try{ return JSON.parse(localStorage.getItem(LSKEY))||{} }catch(e){ return {} } }
 function saveStore(s){ try{ localStorage.setItem(LSKEY, JSON.stringify(s)); noteLocalChange(); }catch(e){} }
 // ---- Cloud sync: GitHub device flow + private gist ----
-const GH_CLIENT_ID='Ov23lifv1YmGi5GFDB5u';
 const SYNC_FILE='saa-quiz-progress.json';
-let syncTimer=null, syncApplying=false, syncPollStop=false, lastPullAt=0;
+let syncTimer=null, syncApplying=false, lastPullAt=0;
 function ghGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function ghSet(k,v){ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
 function ghToken(){ return ghGet('saaQuizGhToken'); }
@@ -285,15 +284,6 @@ function schedulePush(){
   if(syncTimer) clearTimeout(syncTimer);
   syncTimer=setTimeout(()=>{ syncPush(); }, 2000);
 }
-async function ghRefresh(){
-  try{
-    const body=new URLSearchParams({client_id:GH_CLIENT_ID, grant_type:'refresh_token', refresh_token:ghGet('saaQuizGhRefresh')});
-    const r=await fetch('https://github.com/login/oauth/access_token', {method:'POST', headers:{'Accept':'application/json'}, body:body});
-    const d=await r.json();
-    if(d.access_token){ ghSet('saaQuizGhToken', d.access_token); if(d.refresh_token) ghSet('saaQuizGhRefresh', d.refresh_token); return true; }
-  }catch(e){}
-  return false;
-}
 async function ghFetch(path, opts){
   opts=opts||{};
   const send=async ()=>{
@@ -301,9 +291,7 @@ async function ghFetch(path, opts){
     if(opts.body) h['Content-Type']='application/json';
     return fetch('https://api.github.com'+path, {method:opts.method||'GET', headers:h, body:opts.body||undefined});
   };
-  let r=await send();
-  if(r.status===401 && ghGet('saaQuizGhRefresh')){ const ok=await ghRefresh(); if(ok) r=await send(); }
-  return r;
+  return send();
 }
 async function syncFindGist(){
   const cached=ghGet('saaQuizGistId'); if(cached) return cached;
@@ -331,7 +319,7 @@ async function syncPush(){
       const now=Date.now();
       ghSet('saaQuizSyncTs', String(now)); ghSet('saaQuizLocalTs', String(now));
       syncStatus('Connected · synced '+new Date(now).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
-    } else if(r.status===401){ syncStatus('Connection expired — tap Reconnect.'); }
+    } else if(r.status===401){ syncStatus('Token no longer works — tap Reconnect and paste a fresh one.'); }
     else{ syncStatus('Sync failed — will retry on your next answer.'); }
   }catch(e){ syncStatus('Offline — will sync when you are back online.'); }
 }
@@ -344,7 +332,7 @@ async function syncPull(manual){
     const id=await syncFindGist();
     if(!id){ schedulePush(); return; }
     const r=await ghFetch('/gists/'+id);
-    if(r.status===401){ syncStatus('Connection expired — tap Reconnect.'); return; }
+    if(r.status===401){ syncStatus('Token no longer works — tap Reconnect and paste a fresh one.'); return; }
     if(!r.ok) return;
     const d=await r.json();
     const f=d.files && d.files[SYNC_FILE];
@@ -366,44 +354,32 @@ async function syncPull(manual){
     } else if(manual){ syncStatus('Connected · already up to date'); }
   }catch(e){}
 }
-async function syncConnect(){
-  syncPollStop=false;
+function syncConnect(){
+  const inp=document.getElementById('syncTokenInput'); if(inp) inp.value='';
+  const msg=document.getElementById('syncTokenMsg'); if(msg) msg.textContent='';
+  document.getElementById('syncmodal').classList.remove('hidden');
+  if(inp) inp.focus();
+}
+async function syncSaveToken(){
+  const inp=document.getElementById('syncTokenInput');
+  const msg=document.getElementById('syncTokenMsg');
+  const tok=(inp.value||'').trim();
+  if(!tok){ msg.textContent='Paste the token first.'; return; }
+  msg.textContent='Checking…';
+  ghSet('saaQuizGhToken', tok);
   try{
-    const body=new URLSearchParams({client_id:GH_CLIENT_ID, scope:'gist'});
-    const r=await fetch('https://github.com/login/device/code', {method:'POST', headers:{'Accept':'application/json'}, body:body});
-    const d=await r.json();
-    if(!d.user_code) throw new Error('no code');
-    document.getElementById('syncCode').textContent=d.user_code;
-    document.getElementById('syncmodal').classList.remove('hidden');
-    pollDevice(d.device_code, Math.max(d.interval||5, 5), Date.now()+((d.expires_in||900)*1000));
-  }catch(e){ syncStatus('Could not start sign-in — check your connection and try again.'); }
+    const r=await ghFetch('/gists?per_page=1');
+    if(r.status===401){ ghSet('saaQuizGhToken', null); msg.textContent='GitHub rejected that token — check you copied it fully and that the gist box was ticked.'; return; }
+    if(!r.ok){ ghSet('saaQuizGhToken', null); msg.textContent='GitHub returned an error — try again in a moment.'; return; }
+  }catch(e){ ghSet('saaQuizGhToken', null); msg.textContent='Could not reach GitHub — check your connection and try again.'; return; }
+  closeSyncModal();
+  syncStatus('Connected · syncing…');
+  await syncPull(true);
+  schedulePush();
 }
-async function pollDevice(deviceCode, intervalSec, deadline){
-  while(!syncPollStop && Date.now()<deadline){
-    await new Promise(res=>setTimeout(res, intervalSec*1000));
-    if(syncPollStop) return;
-    try{
-      const body=new URLSearchParams({client_id:GH_CLIENT_ID, device_code:deviceCode, grant_type:'urn:ietf:params:oauth:grant-type:device_code'});
-      const r=await fetch('https://github.com/login/oauth/access_token', {method:'POST', headers:{'Accept':'application/json'}, body:body});
-      const d=await r.json();
-      if(d.access_token){
-        ghSet('saaQuizGhToken', d.access_token);
-        if(d.refresh_token) ghSet('saaQuizGhRefresh', d.refresh_token);
-        closeSyncModal();
-        syncStatus('Connected · syncing…');
-        await syncPull(true);
-        schedulePush();
-        return;
-      }
-      if(d.error==='slow_down') intervalSec+=5;
-      else if(d.error && d.error!=='authorization_pending'){ closeSyncModal(); syncStatus('Sign-in was not completed.'); return; }
-    }catch(e){}
-  }
-  if(!syncPollStop){ closeSyncModal(); syncStatus('Sign-in code expired — tap Connect to try again.'); }
-}
-function closeSyncModal(){ syncPollStop=true; document.getElementById('syncmodal').classList.add('hidden'); }
+function closeSyncModal(){ document.getElementById('syncmodal').classList.add('hidden'); }
 function syncDisconnect(){
-  ghSet('saaQuizGhToken', null); ghSet('saaQuizGhRefresh', null); ghSet('saaQuizGistId', null);
+  ghSet('saaQuizGhToken', null); ghSet('saaQuizGistId', null);
   syncStatus('Not connected — progress is saved on this device only.');
 }
 function syncInit(){
