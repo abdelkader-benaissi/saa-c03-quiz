@@ -62,6 +62,7 @@ main{margin:0 auto;padding:20px 14px 64px}
 .dombar span{display:block;height:100%}
 .partcard .pmeta{font-size:12.5px;color:var(--muted);font-weight:500;line-height:1.5}
 .partcard .pprog{font-size:12.5px;font-weight:700;color:var(--orange-d);margin-top:6px;min-height:16px}
+.partcard .pwrong{font-size:13px;font-weight:700;color:var(--red);margin-top:4px;cursor:pointer;text-decoration:underline}
 .progresswrap{background:var(--line);border-radius:99px;height:9px;overflow:hidden;margin:10px 0 6px}
 .progressbar{background:linear-gradient(90deg,var(--orange),#34D399);height:100%;width:0%;transition:width .35s ease;border-radius:99px}
 .meta{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap;gap:6px;font-weight:600}
@@ -197,9 +198,9 @@ html[data-theme="dark"] .revlabel{color:#34d399}
         <button class="btn" id="nextBtn" onclick="move(1)">Next →</button>
       </div>
       <div class="navrow">
-        <button class="btn secondary" onclick="finish()">Finish part &amp; see results</button>
+        <button class="btn secondary" id="finishBtn" onclick="finish()">Finish part &amp; see results</button>
         <button class="btn secondary" onclick="quitToHome()">Quit to parts list</button>
-        <button class="btn secondary" onclick="resetPart()">Reset part</button>
+        <button class="btn secondary" id="resetBtn" onclick="resetPart()">Reset part</button>
       </div>
       <div class="jump">Jump to question <input type="number" id="jumpInput" min="1"> <button class="btn secondary small" onclick="jumpTo()">Go</button></div>
       <div class="legend">
@@ -221,6 +222,7 @@ html[data-theme="dark"] .revlabel{color:#34d399}
       <div id="resDomains"></div>
       <button class="btn" style="text-align:center" onclick="quitToHome()">Back to parts list</button>
       <button class="btn secondary" onclick="toggleReview()">Review wrong answers</button>
+      <button class="btn secondary" id="retestBtn" onclick="retestFromResults()" style="display:none"></button>
     </div>
     <div class="card hidden" id="reviewCard"><h3 style="margin-top:0">Review</h3><div id="reviewList"></div></div>
   </section>
@@ -241,6 +243,7 @@ const DOMAINS=['Secure','Resilient','High-Performing','Cost'];
 const DOMCOLORS={'Secure':'#7d3c98','Resilient':'#1a7f4b','High-Performing':'#146eb4','Cost':'#b7791f'};
 const LSKEY='saaQuizV3';
 let part=null, partIdx=0, order=[], idx=0, answers={}, checked={};
+let mode='part', srcPos=[], lastWrongSrc=[];
 
 function loadStore(){ try{ return JSON.parse(localStorage.getItem(LSKEY))||{} }catch(e){ return {} } }
 function saveStore(s){ try{ localStorage.setItem(LSKEY, JSON.stringify(s)); noteLocalChange(); }catch(e){} }
@@ -423,9 +426,31 @@ function sessionInit(){
 
 function saveProgress(){
   const s=loadStore();
-  s[partIdx]={answers:answers, checked:checked, idx:idx};
+  if(mode==='wrong'){ s['w'+partIdx]={answers:answers, checked:checked, idx:idx, src:srcPos}; }
+  else{ s[partIdx]={answers:answers, checked:checked, idx:idx}; }
   saveStore(s);
 }
+function wrongPositions(i){
+  const sv=loadStore()[i]; if(!sv || !sv.answers) return [];
+  const out=[];
+  PARTS[i].forEach((q,j)=>{ const sel=sv.answers[j]||[]; if(sel.length && !sameSet(sel,q.correct)) out.push(j); });
+  return out;
+}
+function startWrong(i, positions, push=true){
+  if(!positions || !positions.length) return;
+  mode='wrong'; partIdx=i; srcPos=positions.slice();
+  part=srcPos.map(p=>PARTS[i][p]); order=part.map((_,j)=>j); idx=0; answers={}; checked={};
+  if(push) history.pushState({view:'quiz',part:i,wrong:true},'');
+  const sv=loadStore()['w'+i];
+  if(sv && sv.src && sv.src.length===srcPos.length && sv.src.every((v,j)=>v===srcPos[j])){ answers=sv.answers||{}; checked=sv.checked||{}; idx=Math.min(sv.idx||0, order.length-1); }
+  document.getElementById('home').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  document.getElementById('finishBtn').textContent='Finish retest & see results';
+  document.getElementById('resetBtn').textContent='Reset retest';
+  buildPalette(); render();
+}
+function retestFromResults(){ startWrong(partIdx, lastWrongSrc); }
 function breakdown(items){
   const c={}; DOMAINS.forEach(d=>c[d]=0);
   items.forEach(q=>{ if(c[q.domain]!==undefined) c[q.domain]++ });
@@ -453,11 +478,21 @@ function buildHome(){
       if(done>0) prog.textContent='✓ In progress — '+done+' checked · '+ok+' correct — tap to continue';
     }
     b.appendChild(prog);
+    const wp=wrongPositions(i);
+    if(wp.length){
+      const wr=document.createElement('div'); wr.className='pwrong';
+      const svw=store['w'+i];
+      const started=!!(svw && svw.src && svw.src.length===wp.length && svw.checked && Object.keys(svw.checked).length>0);
+      wr.textContent='✗ '+wp.length+' wrong — '+(started ? 'retest in progress, tap to continue' : 'tap to retest them');
+      wr.onclick=(e)=>{ e.stopPropagation(); startWrong(i, wp); };
+      b.appendChild(wr);
+    }
     b.onclick=()=>startPart(i);
     grid.appendChild(b);
   });
 }
 function startPart(i,push=true){
+  mode='part'; srcPos=[];
   partIdx=i; part=PARTS[i]; order=part.map((_,j)=>j); idx=0; answers={}; checked={};
   if(push) history.pushState({view:'quiz',part:i},'');
   const sv=loadStore()[i];
@@ -465,6 +500,8 @@ function startPart(i,push=true){
   document.getElementById('home').classList.add('hidden');
   document.getElementById('results').classList.add('hidden');
   document.getElementById('quiz').classList.remove('hidden');
+  document.getElementById('finishBtn').textContent='Finish part & see results';
+  document.getElementById('resetBtn').textContent='Reset part';
   buildPalette(); render();
 }
 function showHome(){
@@ -484,11 +521,15 @@ window.addEventListener('popstate', function(e){
   const s=e.state;
   if(!s || s.view==='home'){ showHome(); }
   else if(s.view==='quiz'){
-    if(part && partIdx===s.part){
+    if(part && partIdx===s.part && !!s.wrong===(mode==='wrong')){
       document.getElementById('home').classList.add('hidden');
       document.getElementById('results').classList.add('hidden');
       document.getElementById('quiz').classList.remove('hidden');
       render();
+    } else if(s.wrong){
+      const svw=loadStore()['w'+s.part];
+      const pos=(svw && svw.src && svw.src.length)? svw.src : wrongPositions(s.part);
+      if(pos.length) startWrong(s.part, pos, false); else startPart(s.part,false);
     } else startPart(s.part,false);
   }
 });
@@ -503,8 +544,15 @@ function askConfirm(title,text,okLabel,cb){
 function closeModal(){ document.getElementById('modal').classList.add('hidden'); modalCb=null; }
 function confirmModal(){ const cb=modalCb; closeModal(); if(cb) cb(); }
 function resetPart(){
+  if(mode==='wrong'){
+    askConfirm('Reset retest?','This clears your retest answers for Part '+(partIdx+1)+'. The part itself stays untouched.','Reset', function(){
+      const s=loadStore(); delete s['w'+partIdx]; saveStore(s);
+      answers={}; checked={}; idx=0; buildPalette(); render();
+    });
+    return;
+  }
   askConfirm('Reset Part '+(partIdx+1)+'?','This clears all your answers for this part. Your other parts stay untouched.','Reset', function(){
-    const s=loadStore(); delete s[partIdx]; saveStore(s);
+    const s=loadStore(); delete s[partIdx]; delete s['w'+partIdx]; saveStore(s);
     answers={}; checked={}; idx=0; buildPalette(); render();
   });
 }
@@ -544,7 +592,7 @@ function refreshPalette(){
 }
 function render(){
   const q=cur();
-  document.getElementById('qcounter').textContent = 'Part '+(partIdx+1)+' · Question '+(idx+1)+' of '+order.length;
+  document.getElementById('qcounter').textContent = (mode==='wrong' ? 'Part '+(partIdx+1)+' · Wrong answers · Question '+(idx+1)+' of '+order.length : 'Part '+(partIdx+1)+' · Question '+(idx+1)+' of '+order.length);
   const doneCount=Object.keys(checked).length, corrCount=Object.values(checked).filter(Boolean).length;
   document.getElementById('scoreLine').textContent = 'Checked: '+doneCount+' · Correct: '+corrCount;
   const pctDone=((idx+1)/order.length*100)+'%';
@@ -616,7 +664,7 @@ function finish(){
   document.getElementById('quiz').classList.add('hidden');
   document.getElementById('results').classList.remove('hidden');
   document.getElementById('topprogress').style.width='0%';
-  document.getElementById('resTitle').textContent='Part '+(partIdx+1)+' — Results';
+  document.getElementById('resTitle').textContent=(mode==='wrong' ? 'Part '+(partIdx+1)+' — Wrong-answers retest · Results' : 'Part '+(partIdx+1)+' — Results');
   const sc=document.getElementById('resScore');
   sc.textContent=answered? pct+'%' : '—';
   sc.className='scorebig'+(answered ? (pct>=72 ? ' pass' : ' fail') : '');
@@ -625,6 +673,10 @@ function finish(){
   DOMAINS.forEach(d=>{ const [c,a]=domScore[d]; tbl+='<tr><td><span class="badge b-'+d+'">'+d+'</span></td><td>'+(a? c+' / '+a+' ('+Math.round(c/a*100)+'%)' : 'no answers yet')+'</td></tr>'; });
   tbl+='</table>';
   document.getElementById('resDomains').innerHTML=tbl;
+  lastWrongSrc=(mode==='wrong') ? wrong.map(qi=>srcPos[qi]) : wrong.slice();
+  const rb=document.getElementById('retestBtn');
+  if(lastWrongSrc.length){ rb.style.display=''; rb.textContent=(mode==='wrong' ? 'Retest the '+lastWrongSrc.length+' still wrong' : 'Retest the '+lastWrongSrc.length+' wrong answers'); }
+  else{ rb.style.display='none'; }
   const rl=document.getElementById('reviewList'); rl.innerHTML='';
   if(answered===0){ rl.innerHTML='<p>You have not answered any question in this part yet.</p>'; }
   else if(!wrong.length){ rl.innerHTML='<p>Nothing wrong — every question you answered is correct. 🎉</p>'; }
@@ -632,7 +684,7 @@ function finish(){
     const q=part[qi], sel=answers[qi]||[];
     const div=document.createElement('div'); div.className='reviewitem';
     const lab=document.createElement('div'); lab.className='revlabel';
-    lab.appendChild(document.createTextNode('Question '+(order.indexOf(qi)+1)+' of '+total));
+    lab.appendChild(document.createTextNode('Question '+((mode==='wrong' ? srcPos[qi] : order.indexOf(qi))+1)+' of '+(mode==='wrong' ? PARTS[partIdx].length : total)));
     const bd=document.createElement('span'); bd.className='badge b-'+q.domain; bd.textContent=q.domain; lab.appendChild(bd);
     div.appendChild(lab);
     const qd=document.createElement('div'); qd.className='qtext'; qd.textContent=q.q; div.appendChild(qd);
@@ -647,7 +699,7 @@ function finish(){
   });
   if(skipped.length){
     const sk=document.createElement('div'); sk.className='ansline'; sk.style.color='var(--muted)'; sk.style.marginTop='16px';
-    sk.textContent='Not answered ('+skipped.length+') — question numbers in this part: '+skipped.map(qi=>order.indexOf(qi)+1).join(', ');
+    sk.textContent='Not answered ('+skipped.length+') — question numbers in this part: '+skipped.map(qi=>(mode==='wrong' ? srcPos[qi] : order.indexOf(qi))+1).join(', ');
     rl.appendChild(sk);
   }
   document.getElementById('reviewCard').classList.add('hidden');
